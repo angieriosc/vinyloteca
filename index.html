@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vinyloteca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0C1016;
+    --bg-2: #151B23;
+    --content-bg: #EEF1F5;
+    --card: #FFFFFF;
+    --ink: #12161C;
+    --ink-soft: #6B7684;
+    --ink-inverse: #E7ECF1;
+    --accent-teal: #35C6D9;
+    --accent-gold: #D9A441;
+    --accent-deep: #8B3A2E;
+    --ok: #4C8C5B;
+    --warn: #B98A2E;
+    --bad: #B34A4A;
+    --line: rgba(18,22,28,0.09);
+    --line-dark: rgba(231,236,241,0.10);
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 10px 26px rgba(18,22,28,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Inter', sans-serif;
+    background: var(--content-bg);
+    color: var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{ font-family:'Inter', sans-serif; font-weight:700; margin:0; letter-spacing:-0.01em; }
+  p{margin:0;}
+  button{ font-family:inherit; cursor:pointer; }
+  input,select{ font-family:inherit; }
+
+  .app{ display:flex; min-height:100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .nav{
+    width: 248px;
+    flex-shrink:0;
+    background: linear-gradient(180deg, var(--bg), #090C11);
+    color: var(--ink-inverse);
+    display:flex;
+    flex-direction:column;
+    padding: 26px 18px;
+    position: sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{ display:flex; align-items:center; gap:11px; margin-bottom:34px; padding-left:4px; }
+  .brand-mark{
+    width:32px; height:32px; border-radius:50%; flex-shrink:0; position:relative;
+    background: conic-gradient(from 0deg, #35C6D9, #4C86D9, #D9A441, #C9613B, #35C6D9);
+  }
+  .brand-mark::after{ content:""; position:absolute; inset:29%; border-radius:50%; background: var(--bg); }
+  .brand h1{ font-size:1.2rem; letter-spacing:-0.01em; color:var(--ink-inverse); }
+  .nav-tabs{ display:flex; flex-direction:column; gap:4px; margin-bottom:22px; }
+  .nav-tab{
+    text-align:left;
+    background:transparent;
+    border:none;
+    color: rgba(231,236,241,0.6);
+    padding:10px 13px;
+    border-radius: var(--radius);
+    font-size:0.93rem;
+    font-weight:500;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .nav-tab:hover{ background: rgba(231,236,241,0.05); color: var(--ink-inverse); }
+  .nav-tab.active{
+    background: rgba(53,198,217,0.10);
+    color: var(--accent-teal);
+    box-shadow: inset 0 0 0 1px rgba(53,198,217,0.35), 0 0 18px rgba(53,198,217,0.22);
+  }
+  .btn-add{
+    margin-top:auto;
+    background: var(--accent-gold);
+    color: #241A12;
+    border:none;
+    padding:12px 14px;
+    border-radius: var(--radius);
+    font-weight:700;
+    font-size:0.92rem;
+    box-shadow: 0 8px 18px rgba(217,164,65,0.28);
+  }
+  .btn-add:hover{ filter:brightness(1.05); }
+  .nav-hint{ font-size:0.74rem; color: rgba(231,236,241,0.35); margin-top:14px; line-height:1.5; padding-left:2px; }
+
+  /* ---------- Main content ---------- */
+  .content{ flex:1; padding: 36px 44px; max-width:1240px; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+  .panel-header{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; }
+  .panel-header h2{ font-size:1.7rem; }
+  .muted{ color: var(--ink-soft); font-size:0.9rem; margin-top:4px; }
+
+  .controls-bar{
+    display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;
+  }
+  .controls-bar input[type=search], .controls-bar select{
+    background: var(--card);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding:9px 12px;
+    font-size:0.88rem;
+    color: var(--ink);
+  }
+  .controls-bar input[type=search]{ flex:1 1 220px; min-width:180px; }
+  .controls-bar select{ flex:0 0 auto; }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px 18px;
+  }
+  .card{
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 14px 14px 16px;
+    box-shadow: var(--shadow);
+    cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .card:hover{ transform: translateY(-2px); box-shadow: 0 14px 30px rgba(18,22,28,0.14); }
+  .cover-wrap{ position:relative; aspect-ratio:1; margin-bottom:12px; }
+  .vinyl-peek{
+    position:absolute; top:6%; right:-12%; width:58%; height:58%; border-radius:50%;
+    background: repeating-radial-gradient(circle at 50% 50%, #15100B 0, #15100B 2px, #241C15 3px, #241C15 4px);
+    box-shadow: -6px 0 14px rgba(0,0,0,.25);
+    z-index:0;
+  }
+  .vinyl-peek::after{
+    content:""; position:absolute; inset:40%; border-radius:50%; background: var(--accent-gold);
+  }
+  .cover-img{
+    position:relative; z-index:1; width:100%; height:100%; object-fit:cover;
+    border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,.18);
+    background: #E3E7EC;
+  }
+  .cover-placeholder{
+    position:relative; z-index:1; width:100%; height:100%; border-radius:8px;
+    background: #E3E7EC; display:flex; align-items:center; justify-content:center;
+    color: var(--ink-soft); font-size:0.8rem; box-shadow:0 8px 16px rgba(0,0,0,.12);
+  }
+  .card-album{ font-size:1rem; line-height:1.25; margin-bottom:2px; font-weight:600; }
+  .card-artist{ font-size:0.85rem; color: var(--ink-soft); margin-bottom:8px; }
+  .card-meta{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .badge{
+    font-size:0.72rem; font-weight:600; padding:3px 9px; border-radius:20px;
+    color:#fff;
+  }
+  .badge.cond-excelente{ background: var(--ok); }
+  .badge.cond-bueno{ background: #3E6E94; }
+  .badge.cond-medio{ background: var(--warn); }
+  .badge.cond-malo{ background: var(--bad); }
+  .genre-tag{ font-size:0.72rem; color: var(--ink-soft); }
+  .card-prices{ display:flex; justify-content:space-between; font-size:0.82rem; border-top:1px solid var(--line); padding-top:8px; }
+  .price-label{ color: var(--ink-soft); display:block; font-size:0.68rem; }
+  .price-value{ font-weight:600; }
+  .sold-flag{ color: var(--ok); }
+
+  .empty-state{
+    text-align:center; padding: 60px 20px; color: var(--ink-soft);
+  }
+  .empty-state h3{ margin-bottom:8px; color: var(--ink); }
+  .empty-state button{
+    margin-top:16px; background: var(--accent-deep); color:#fff; border:none;
+    padding:10px 18px; border-radius: var(--radius); font-weight:600;
+  }
+  .loading-state{ padding:40px 0; color: var(--ink-soft); font-size:0.9rem; }
+
+  /* ---------- Stats tab ---------- */
+  .stats-row{ display:flex; gap:16px; margin-bottom:30px; flex-wrap:wrap; }
+  .stat-card{
+    background: var(--card); border-radius: var(--radius-lg); box-shadow: var(--shadow);
+    padding: 20px 22px; min-width:230px; flex:1;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .stat-main{ display:flex; flex-direction:column; gap:7px; }
+  .stat-label{ font-size:0.8rem; color: var(--ink-soft); }
+  .stat-value{ font-size:1.9rem; font-weight:800; letter-spacing:-0.01em; color: var(--ink); }
+  .stat-value.accent-gold{ color: var(--accent-gold); }
+  .stat-value.accent-green{ color: var(--ok); }
+  .stat-side{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex-shrink:0; }
+  .stat-side-label{ font-size:0.72rem; color: var(--ink-soft); white-space:nowrap; }
+  .mini-spark, .mini-curve{ width:78px; height:28px; display:block; }
+  .mini-spark polyline{ fill:none; stroke: var(--accent-teal); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .mini-curve path{ fill:none; stroke: var(--accent-gold); stroke-width:2; stroke-linecap:round; }
+  .mini-donut{ width:34px; height:34px; border-radius:50%; background: conic-gradient(var(--line) 0 100%); }
+
+  .sales-table{ width:100%; border-collapse:collapse; background: var(--card); border-radius: var(--radius-lg); overflow:hidden; box-shadow: var(--shadow); }
+  .sales-table th, .sales-table td{ text-align:left; padding:11px 14px; font-size:0.87rem; border-bottom:1px solid var(--line); }
+  .sales-table th{ color: var(--ink-soft); font-weight:600; font-size:0.75rem; }
+  .sales-table tbody tr:last-child td{ border-bottom:none; }
+  .profit-pos{ color: var(--ok); font-weight:600; }
+  .profit-neg{ color: var(--bad); font-weight:600; }
+
+  /* ---------- Modals ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background: rgba(12,16,22,0.55);
+    display:flex; align-items:center; justify-content:center; padding:24px; z-index:50;
+  }
+  .modal-overlay[hidden]{ display:none; }
+  .modal{
+    background: var(--content-bg); border-radius: var(--radius-lg); max-width:640px; width:100%;
+    max-height:88vh; overflow-y:auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+  .modal-header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 20px 24px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--content-bg);
+  }
+  .icon-btn{ background:transparent; border:none; font-size:1.1rem; color: var(--ink-soft); padding:4px 8px; }
+  .icon-btn:hover{ color: var(--ink); }
+
+  .record-form{ padding: 20px 24px 24px; display:flex; flex-direction:column; gap:16px; }
+  .form-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .field{ flex:1 1 200px; display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:0.8rem; font-weight:600; color: var(--ink-soft); }
+  .field input[type=text], .field input[type=number], .field select, .field input[type=url]{
+    border:1px solid var(--line); border-radius: var(--radius); padding:9px 11px; font-size:0.9rem; background:#fff;
+  }
+  .field small{ color: var(--ink-soft); font-size:0.72rem; }
+  .field-file{ border:1px dashed var(--line); border-radius: var(--radius); padding:10px 12px; background:#fff; }
+  .thumbs-row{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .thumbs-row img{ width:52px; height:52px; object-fit:cover; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.18); }
+  .form-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+  .btn-primary{ background: var(--accent-deep); color:#fff; border:none; padding:11px 20px; border-radius: var(--radius); font-weight:700; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); padding:11px 18px; border-radius: var(--radius); color:var(--ink); }
+  .btn-danger-outline{ background:transparent; border:1px solid var(--bad); color:var(--bad); padding:9px 16px; border-radius: var(--radius); font-weight:600; font-size:0.85rem; }
+  .form-error{ color: var(--bad); font-size:0.82rem; }
+  .form-status{ color: var(--ink-soft); font-size:0.78rem; }
+
+  /* ---------- Detail modal ---------- */
+  .detail-modal{ max-width:720px; }
+  .detail-top{ display:flex; gap:20px; padding:22px 24px 6px; flex-wrap:wrap; }
+  .detail-cover{ position:relative; width:180px; height:180px; flex-shrink:0; }
+  .detail-info h3{ font-size:1.35rem; margin-bottom:4px; }
+  .detail-artist{ color: var(--ink-soft); font-size:1rem; margin-bottom:10px; }
+  .detail-line{ font-size:0.86rem; margin-bottom:6px; }
+  .detail-line span.k{ color: var(--ink-soft); }
+  .detail-actions{ display:flex; gap:10px; margin-top:14px; }
+  .section-title{ font-size:0.8rem; font-weight:600; color: var(--ink-soft); margin: 18px 24px 8px; }
+  .vinyl-imgs{ display:flex; gap:10px; padding: 0 24px 20px; flex-wrap:wrap; }
+  .vinyl-imgs img{ width:120px; height:120px; object-fit:cover; border-radius:8px; box-shadow: var(--shadow); }
+  .video-wrap{ padding: 0 24px 24px; }
+  .video-wrap video{ width:100%; border-radius:8px; box-shadow: var(--shadow); }
+  .video-wrap iframe{ width:100%; aspect-ratio:16/9; border:none; border-radius:8px; }
+  .video-link{ display:inline-block; background: var(--bg); color: var(--ink-inverse); padding:9px 16px; border-radius: var(--radius); font-size:0.85rem; text-decoration:none; }
+  .no-media{ color: var(--ink-soft); font-size:0.85rem; padding: 0 24px 20px; }
+
+  @media (max-width: 760px){
+    .app{ flex-direction:column; }
+    .nav{ width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:16px 18px; gap:14px; }
+    .brand{ margin-bottom:0; }
+    .nav-tabs{ flex-direction:row; margin-bottom:0; }
+    .btn-add{ margin-top:0; margin-left:auto; }
+    .nav-hint{ display:none; }
+    .content{ padding: 24px 18px; }
+    .stat-card{ flex-direction:column; align-items:flex-start; }
+    .stat-side{ align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="nav">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <h1>Vinyloteca</h1>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="coleccion">Colección</button>
+      <button class="nav-tab" data-tab="ventas">Ventas</button>
+    </nav>
+    <button class="btn-add" id="openAddBtn">+ Agregar disco</button>
+    <p class="nav-hint">Tus discos se guardan en tu cuenta y solo tú puedes verlos.</p>
+  </aside>
+
+  <main class="content">
+    <section id="tab-coleccion" class="tab-panel active">
+      <header class="panel-header">
+        <div>
+          <h2>Tu colección</h2>
+          <p class="muted" id="collectionCount">Cargando…</p>
+        </div>
+      </header>
+
+      <div class="controls-bar">
+        <input type="search" id="searchInput" placeholder="Buscar por álbum o artista…">
+        <select id="filterGenre"><option value="">Todos los géneros</option></select>
+        <select id="filterCondition">
+          <option value="">Toda condición</option>
+          <option value="Excelente">Excelente</option>
+          <option value="Bueno">Bueno</option>
+          <option value="Medio">Medio</option>
+          <option value="Malo">Malo</option>
+        </select>
+        <select id="sortSelect">
+          <option value="album-asc">Álbum (A–Z)</option>
+          <option value="album-desc">Álbum (Z–A)</option>
+          <option value="artist-asc">Artista (A–Z)</option>
+          <option value="artist-desc">Artista (Z–A)</option>
+          <option value="cost-asc">Precio costo (menor a mayor)</option>
+          <option value="cost-desc">Precio costo (mayor a menor)</option>
+          <option value="sale-asc">Precio venta (menor a mayor)</option>
+          <option value="sale-desc">Precio venta (mayor a menor)</option>
+        </select>
+      </div>
+
+      <div id="loadingState" class="loading-state">Cargando colección…</div>
+      <div id="grid" class="grid"></div>
+      <div id="emptyState" class="empty-state" hidden>
+        <h3>Aún no hay discos aquí</h3>
+        <p>Agrega el primero de tu colección para empezar a organizarla.</p>
+        <button id="emptyAddBtn">+ Agregar disco</button>
+      </div>
+    </section>
+
+    <section id="tab-ventas" class="tab-panel">
+      <header class="panel-header"><h2>Ventas</h2></header>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-main">
+            <span class="stat-label">Discos vendidos</span>
+            <span class="stat-value" id="statSoldCount">0</span>
+          </div>
+          <div class="stat-side">
+            <span class="stat-side-label" id="statSoldPct">0% de tu colección</span>
+            <svg class="mini-spark" viewBox="0 0 80 32" preserveAspectRatio="none">
+              <polyline points="0,24 10,20 20,22 30,14 40,17 50,10 60,13 70,6 80,9"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-main">
+            <span class="stat-label">Total generado</span>
+            <span class="stat-value accent-gold" id="statTotalGenerated">$0.00</span>
+          </div>
+          <div class="stat-side">
+            <span class="stat-side-label" id="statAvgSale">Promedio: $0.00</span>
+            <svg class="mini-curve" viewBox="0 0 80 32" preserveAspectRatio="none">
+              <path d="M0,28 C20,28 25,6 45,10 C60,13 65,4 80,2"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-main">
+            <span class="stat-label">Ganancia estimada</span>
+            <span class="stat-value accent-green" id="statProfit">$0.00</span>
+          </div>
+          <div class="stat-side">
+            <span class="stat-side-label" id="statMargin">Margen: 0%</span>
+            <div class="mini-donut" id="statDonut"></div>
+          </div>
+        </div>
+      </div>
+      <table class="sales-table" id="salesTable">
+        <thead><tr><th>Álbum</th><th>Artista</th><th>Costo</th><th>Venta</th><th>Ganancia</th></tr></thead>
+        <tbody id="salesTableBody"></tbody>
+      </table>
+      <div id="salesEmpty" class="empty-state" hidden>
+        <h3>Todavía no has vendido discos</h3>
+        <p>Cuando registres un precio de venta en un disco, aparecerá aquí.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Form modal -->
+<div class="modal-overlay" id="formModalOverlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="formModalTitle">Agregar disco</h3>
+      <button class="icon-btn" id="closeFormModal">✕</button>
+    </div>
+    <form class="record-form" id="recordForm">
+      <div class="form-row">
+        <div class="field">
+          <label for="fAlbum">Álbum *</label>
+          <input type="text" id="fAlbum" required>
+        </div>
+        <div class="field">
+          <label for="fArtist">Artista *</label>
+          <input type="text" id="fArtist" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="fYear">Año (opcional)</label>
+          <input type="number" id="fYear" min="1900" max="2100" placeholder="1979">
+        </div>
+        <div class="field">
+          <label for="fGenre">Género *</label>
+          <input type="text" id="fGenre" list="genreOptions" required placeholder="Rock, Jazz, Salsa…">
+          <datalist id="genreOptions">
+            <option value="Rock"></option><option value="Pop"></option><option value="Jazz"></option>
+            <option value="Salsa"></option><option value="Cumbia"></option><option value="Reggae"></option>
+            <option value="Blues"></option><option value="Soul"></option><option value="Funk"></option>
+            <option value="Clásica"></option><option value="Electrónica"></option><option value="Hip Hop"></option>
+            <option value="Metal"></option><option value="Folk"></option><option value="Latin"></option>
+          </datalist>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="fCondition">Condición *</label>
+          <select id="fCondition" required>
+            <option value="">Elegir…</option>
+            <option value="Excelente">Excelente</option>
+            <option value="Bueno">Bueno</option>
+            <option value="Medio">Medio</option>
+            <option value="Malo">Malo</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fCost">Precio de costo *</label>
+          <input type="number" id="fCost" min="0" step="0.01" required placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="fSale">Precio de venta (opcional)</label>
+          <input type="number" id="fSale" min="0" step="0.01" placeholder="Vacío si no se ha vendido">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fCover">Portada del disco</label>
+        <div class="field-file"><input type="file" id="fCover" accept="image/*"></div>
+        <div class="thumbs-row" id="coverThumb"></div>
+      </div>
+
+      <div class="field">
+        <label for="fVinylImgs">Fotos del vinilo (hasta 3)</label>
+        <div class="field-file"><input type="file" id="fVinylImgs" accept="image/*" multiple></div>
+        <small>Selecciona hasta 3 imágenes del disco (rayones, etiqueta, etc.)</small>
+        <div class="thumbs-row" id="vinylThumbs"></div>
+      </div>
+
+      <div class="field">
+        <label for="fVideoFile">Video de cómo suena — archivo (opcional, máx. 5 MB)</label>
+        <div class="field-file"><input type="file" id="fVideoFile" accept="video/*"></div>
+      </div>
+      <div class="field">
+        <label for="fVideoUrl">…o enlace de video (opcional)</label>
+        <input type="url" id="fVideoUrl" placeholder="https://youtube.com/…">
+        <small>Si el video pesa más de 3 MB, mejor sube un clip corto o pega un enlace de YouTube/Drive.</small>
+      </div>
+
+      <p class="form-error" id="formError" hidden></p>
+      <p class="form-status" id="formStatus" hidden></p>
+      <div class="form-actions">
+        <button type="button" class="btn-ghost" id="cancelForm">Cancelar</button>
+        <button type="submit" class="btn-primary" id="submitFormBtn">Guardar disco</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="detailModalOverlay" hidden>
+  <div class="modal detail-modal">
+    <div class="modal-header">
+      <h3>Detalle del disco</h3>
+      <button class="icon-btn" id="closeDetailModal">✕</button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- State ----------
+  let records = [];
+  const mediaCache = {};
+  let editingId = null;
+
+  const $ = (id) => document.getElementById(id);
+  const money = (n) => new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN', maximumFractionDigits:2 }).format(Number(n)||0);
+  const isSold = (r) => r.salePrice !== '' && r.salePrice !== null && r.salePrice !== undefined && !isNaN(Number(r.salePrice));
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+
+  // ---------- Storage helpers ----------
+  async function loadRecords(){
+    $('loadingState').hidden = false;
+    const out = [];
+    try{
+      const list = await window.storage.list('record:', false);
+      const keys = (list && list.keys) ? list.keys : [];
+      for(const key of keys){
+        try{
+          const res = await window.storage.get(key, false);
+          if(res && res.value) out.push(JSON.parse(res.value));
+        }catch(e){ console.error('No se pudo leer', key, e); }
+      }
+    }catch(e){
+      console.error('No se pudo listar la colección', e);
+    }
+    records = out;
+    $('loadingState').hidden = true;
+    renderAll();
+  }
+
+  async function persistRecord(record){
+    const res = await window.storage.set('record:' + record.id, JSON.stringify(record), false);
+    if(!res) throw new Error('No se pudo guardar el disco');
+  }
+
+  async function persistMedia(id, media){
+    const res = await window.storage.set('media:' + id, JSON.stringify(media), false);
+    if(!res) throw new Error('No se pudo guardar el material multimedia');
+  }
+
+  async function fetchMedia(id){
+    if(mediaCache[id]) return mediaCache[id];
+    try{
+      const res = await window.storage.get('media:' + id, false);
+      const media = res && res.value ? JSON.parse(res.value) : { vinylImages: [], video: null };
+      mediaCache[id] = media;
+      return media;
+    }catch(e){
+      const empty = { vinylImages: [], video: null };
+      mediaCache[id] = empty;
+      return empty;
+    }
+  }
+
+  async function deleteRecordEverywhere(id){
+    try{ await window.storage.delete('record:' + id, false); }catch(e){ console.error(e); }
+    try{ await window.storage.delete('media:' + id, false); }catch(e){ /* puede no existir */ }
+    delete mediaCache[id];
+    records = records.filter(r => r.id !== id);
+    renderAll();
+  }
+
+  // ---------- Image / video helpers ----------
+  function readFileAsDataURL(file){
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = () => reject(new Error('No se pudo leer el archivo'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  function compressImage(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if(w > h && w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else if(h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('Imagen inválida'));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ---------- Tabs ----------
+  document.querySelectorAll('.nav-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $('tab-' + btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab === 'ventas') renderSales();
+    });
+  });
+
+  // ---------- Rendering: collection ----------
+  function uniqueGenres(){
+    const set = new Set(records.map(r => r.genre).filter(Boolean));
+    return Array.from(set).sort((a,b) => a.localeCompare(b));
+  }
+
+  function refreshGenreFilterOptions(){
+    const sel = $('filterGenre');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Todos los géneros</option>' +
+      uniqueGenres().map(g => '<option value="' + escapeHtml(g) + '">' + escapeHtml(g) + '</option>').join('');
+    sel.value = current;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function conditionClass(cond){
+    return 'cond-' + (cond || '').toLowerCase();
+  }
+
+  function getFilteredSorted(){
+    const q = $('searchInput').value.trim().toLowerCase();
+    const genre = $('filterGenre').value;
+    const cond = $('filterCondition').value;
+    const sortVal = $('sortSelect').value;
+
+    let list = records.filter(r => {
+      if(q && !((r.album||'').toLowerCase().includes(q) || (r.artist||'').toLowerCase().includes(q))) return false;
+      if(genre && r.genre !== genre) return false;
+      if(cond && r.condition !== cond) return false;
+      return true;
+    });
+
+    const [field, dir] = sortVal.split('-');
+    list.sort((a, b) => {
+      let av, bv;
+      if(field === 'album'){ av = (a.album||'').toLowerCase(); bv = (b.album||'').toLowerCase(); }
+      else if(field === 'artist'){ av = (a.artist||'').toLowerCase(); bv = (b.artist||'').toLowerCase(); }
+      else if(field === 'cost'){ av = Number(a.costPrice)||0; bv = Number(b.costPrice)||0; }
+      else if(field === 'sale'){ av = isSold(a) ? Number(a.salePrice) : -Infinity; bv = isSold(b) ? Number(b.salePrice) : -Infinity; }
+      if(av < bv) return dir === 'asc' ? -1 : 1;
+      if(av > bv) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }
+
+  function renderAll(){
+    refreshGenreFilterOptions();
+    renderGrid();
+    if($('tab-ventas').classList.contains('active')) renderSales();
+  }
+
+  function renderGrid(){
+    const list = getFilteredSorted();
+    $('collectionCount').textContent = records.length + (records.length === 1 ? ' disco en tu colección' : ' discos en tu colección');
+    const grid = $('grid');
+    if(records.length === 0){
+      grid.innerHTML = '';
+      $('emptyState').hidden = false;
+      return;
+    }
+    $('emptyState').hidden = true;
+    if(list.length === 0){
+      grid.innerHTML = '<div class="empty-state"><h3>Sin resultados</h3><p>Ajusta tu búsqueda o filtros.</p></div>';
+      return;
+    }
+    grid.innerHTML = list.map(r => {
+      const coverHtml = r.cover
+        ? '<img class="cover-img" src="' + r.cover + '" alt="Portada de ' + escapeHtml(r.album) + '">'
+        : '<div class="cover-placeholder">Sin portada</div>';
+      const saleLine = isSold(r)
+        ? '<div><span class="price-label sold-flag">Vendido en</span><span class="price-value sold-flag">' + money(r.salePrice) + '</span></div>'
+        : '<div><span class="price-label">Venta</span><span class="price-value">—</span></div>';
+      return (
+        '<div class="card" data-id="' + r.id + '">' +
+          '<div class="cover-wrap"><div class="vinyl-peek"></div>' + coverHtml + '</div>' +
+          '<div class="card-album">' + escapeHtml(r.album) + '</div>' +
+          '<div class="card-artist">' + escapeHtml(r.artist) + (r.year ? ' · ' + escapeHtml(r.year) : '') + '</div>' +
+          '<div class="card-meta">' +
+            '<span class="badge ' + conditionClass(r.condition) + '">' + escapeHtml(r.condition) + '</span>' +
+            '<span class="genre-tag">' + escapeHtml(r.genre) + '</span>' +
+          '</div>' +
+          '<div class="card-prices">' +
+            '<div><span class="price-label">Costo</span><span class="price-value">' + money(r.costPrice) + '</span></div>' +
+            saleLine +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    grid.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', () => openDetail(card.dataset.id));
+    });
+  }
+
+  // ---------- Rendering: sales tab ----------
+  function renderSales(){
+    const sold = records.filter(isSold);
+    const totalGenerated = sold.reduce((sum, r) => sum + Number(r.salePrice), 0);
+    const totalCostOfSold = sold.reduce((sum, r) => sum + (Number(r.costPrice)||0), 0);
+    const profit = totalGenerated - totalCostOfSold;
+    const soldPct = records.length ? Math.round((sold.length / records.length) * 100) : 0;
+    const avgSale = sold.length ? totalGenerated / sold.length : 0;
+    const margin = totalGenerated > 0 ? Math.round((profit / totalGenerated) * 100) : 0;
+
+    $('statSoldCount').textContent = sold.length;
+    $('statSoldPct').textContent = soldPct + '% de tu colección';
+    $('statTotalGenerated').textContent = money(totalGenerated);
+    $('statAvgSale').textContent = 'Promedio: ' + money(avgSale);
+    $('statProfit').textContent = money(profit);
+    $('statProfit').classList.toggle('accent-green', profit >= 0);
+    $('statProfit').style.color = profit >= 0 ? '' : 'var(--bad)';
+    $('statMargin').textContent = 'Margen: ' + margin + '%';
+
+    const costShare = totalGenerated > 0 ? Math.max(0, Math.min(100, (totalCostOfSold / totalGenerated) * 100)) : 0;
+    const donut = $('statDonut');
+    if(totalGenerated > 0){
+      donut.style.background = 'conic-gradient(var(--ok) 0 ' + (100 - costShare) + '%, var(--accent-gold) ' + (100 - costShare) + '% 100%)';
+    }else{
+      donut.style.background = 'conic-gradient(var(--line) 0 100%)';
+    }
+
+    if(sold.length === 0){
+      $('salesTable').hidden = true;
+      $('salesEmpty').hidden = false;
+      return;
+    }
+    $('salesTable').hidden = false;
+    $('salesEmpty').hidden = true;
+
+    const rows = sold.slice().sort((a,b) => (a.album||'').localeCompare(b.album||''));
+    $('salesTableBody').innerHTML = rows.map(r => {
+      const p = Number(r.salePrice) - (Number(r.costPrice)||0);
+      return (
+        '<tr>' +
+          '<td>' + escapeHtml(r.album) + '</td>' +
+          '<td>' + escapeHtml(r.artist) + '</td>' +
+          '<td>' + money(r.costPrice) + '</td>' +
+          '<td>' + money(r.salePrice) + '</td>' +
+          '<td class="' + (p >= 0 ? 'profit-pos' : 'profit-neg') + '">' + money(p) + '</td>' +
+        '</tr>'
+      );
+    }).join('');
+  }
+
+  // ---------- Form modal ----------
+  let pendingCoverData = '';
+  let pendingVinylImages = [];
+
+  function resetForm(){
+    $('recordForm').reset();
+    pendingCoverData = '';
+    pendingVinylImages = [];
+    $('coverThumb').innerHTML = '';
+    $('vinylThumbs').innerHTML = '';
+    $('formError').hidden = true;
+    $('formStatus').hidden = true;
+    editingId = null;
+  }
+
+  function openForm(record){
+    resetForm();
+    if(record){
+      editingId = record.id;
+      $('formModalTitle').textContent = 'Editar disco';
+      $('fAlbum').value = record.album || '';
+      $('fArtist').value = record.artist || '';
+      $('fYear').value = record.year || '';
+      $('fGenre').value = record.genre || '';
+      $('fCondition').value = record.condition || '';
+      $('fCost').value = record.costPrice != null ? record.costPrice : '';
+      $('fSale').value = record.salePrice != null && record.salePrice !== '' ? record.salePrice : '';
+      pendingCoverData = record.cover || '';
+      if(pendingCoverData){ $('coverThumb').innerHTML = '<img src="' + pendingCoverData + '">'; }
+      fetchMedia(record.id).then(media => {
+        pendingVinylImages = (media.vinylImages || []).slice();
+        renderVinylThumbs();
+        if(media.video){
+          if(media.video.type === 'url'){ $('fVideoUrl').value = media.video.data; }
+        }
+      });
+    }else{
+      editingId = null;
+      $('formModalTitle').textContent = 'Agregar disco';
+    }
+    $('formModalOverlay').hidden = false;
+  }
+
+  function renderVinylThumbs(){
+    $('vinylThumbs').innerHTML = pendingVinylImages.map(src => '<img src="' + src + '">').join('');
+  }
+
+  $('openAddBtn').addEventListener('click', () => openForm(null));
+  $('emptyAddBtn').addEventListener('click', () => openForm(null));
+  $('closeFormModal').addEventListener('click', () => $('formModalOverlay').hidden = true);
+  $('cancelForm').addEventListener('click', () => $('formModalOverlay').hidden = true);
+
+  $('fCover').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      pendingCoverData = await compressImage(file, 700, 0.78);
+      $('coverThumb').innerHTML = '<img src="' + pendingCoverData + '">';
+    }catch(err){
+      showFormError('No se pudo procesar la imagen de portada.');
+    }
+  });
+
+  $('fVinylImgs').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files).slice(0, 3);
+    try{
+      pendingVinylImages = await Promise.all(files.map(f => compressImage(f, 700, 0.75)));
+      renderVinylThumbs();
+    }catch(err){
+      showFormError('No se pudieron procesar las fotos del vinilo.');
+    }
+  });
+
+  function showFormError(msg){
+    const el = $('formError');
+    el.textContent = msg;
+    el.hidden = false;
+  }
+  function showFormStatus(msg){
+    const el = $('formStatus');
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  $('recordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('formError').hidden = true;
+    $('formStatus').hidden = true;
+
+    const album = $('fAlbum').value.trim();
+    const artist = $('fArtist').value.trim();
+    const year = $('fYear').value.trim();
+    const genre = $('fGenre').value.trim();
+    const condition = $('fCondition').value;
+    const cost = $('fCost').value;
+    const sale = $('fSale').value.trim();
+    const videoFile = $('fVideoFile').files[0];
+    const videoUrl = $('fVideoUrl').value.trim();
+
+    if(!album || !artist || !genre || !condition || cost === ''){
+      showFormError('Completa los campos obligatorios: álbum, artista, género, condición y precio de costo.');
+      return;
+    }
+    if(videoFile && videoFile.size > 5 * 1024 * 1024){
+      showFormError('El video pesa más de 5 MB. Sube un clip más corto o pega un enlace en su lugar.');
+      return;
+    }
+
+    const submitBtn = $('submitFormBtn');
+    submitBtn.disabled = true;
+    showFormStatus('Guardando…');
+
+    try{
+      const id = editingId || uid();
+      const prevRecord = editingId ? records.find(r => r.id === editingId) : null;
+      const record = {
+        id, album, artist,
+        year: year || '',
+        genre, condition,
+        costPrice: Number(cost),
+        salePrice: sale === '' ? '' : Number(sale),
+        cover: pendingCoverData || '',
+        dateAdded: prevRecord ? prevRecord.dateAdded : Date.now()
+      };
+
+      let video = null;
+      if(videoFile){
+        video = { type: 'file', data: await readFileAsDataURL(videoFile) };
+      }else if(videoUrl){
+        video = { type: 'url', data: videoUrl };
+      }else if(editingId){
+        const existingMedia = await fetchMedia(editingId);
+        video = existingMedia.video || null;
+      }
+
+      await persistRecord(record);
+      await persistMedia(id, { vinylImages: pendingVinylImages, video });
+      mediaCache[id] = { vinylImages: pendingVinylImages, video };
+
+      const idx = records.findIndex(r => r.id === id);
+      if(idx >= 0) records[idx] = record; else records.push(record);
+
+      $('formModalOverlay').hidden = true;
+      renderAll();
+    }catch(err){
+      console.error(err);
+      showFormError('Algo falló al guardar. Intenta de nuevo (revisa que las imágenes o el video no sean demasiado pesados).');
+    }finally{
+      submitBtn.disabled = false;
+    }
+  });
+
+  // ---------- Detail modal ----------
+  async function openDetail(id){
+    const record = records.find(r => r.id === id);
+    if(!record) return;
+    $('detailModalOverlay').hidden = false;
+    const body = $('detailBody');
+    body.innerHTML =
+      '<div class="detail-top">' +
+        '<div class="detail-cover"><div class="vinyl-peek"></div>' +
+        (record.cover ? '<img class="cover-img" src="' + record.cover + '">' : '<div class="cover-placeholder">Sin portada</div>') +
+        '</div>' +
+        '<div class="detail-info">' +
+          '<h3>' + escapeHtml(record.album) + '</h3>' +
+          '<div class="detail-artist">' + escapeHtml(record.artist) + (record.year ? ' · ' + escapeHtml(record.year) : '') + '</div>' +
+          '<div class="detail-line"><span class="k">Género:</span> ' + escapeHtml(record.genre) + '</div>' +
+          '<div class="detail-line"><span class="k">Condición:</span> <span class="badge ' + conditionClass(record.condition) + '">' + escapeHtml(record.condition) + '</span></div>' +
+          '<div class="detail-line"><span class="k">Costo:</span> ' + money(record.costPrice) + '</div>' +
+          '<div class="detail-line"><span class="k">Venta:</span> ' + (isSold(record) ? money(record.salePrice) : 'No vendido') + '</div>' +
+          '<div class="detail-actions">' +
+            '<button class="btn-ghost" id="editBtn">Editar</button>' +
+            '<button class="btn-danger-outline" id="deleteBtn">Eliminar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<p class="section-title">Fotos del vinilo</p>' +
+      '<div class="vinyl-imgs" id="vinylImgsWrap"><p class="no-media">Cargando…</p></div>' +
+      '<p class="section-title">Cómo suena</p>' +
+      '<div class="video-wrap" id="videoWrap"><p class="no-media">Cargando…</p></div>';
+
+    $('editBtn').addEventListener('click', () => { $('detailModalOverlay').hidden = true; openForm(record); });
+    $('deleteBtn').addEventListener('click', async () => {
+      if(confirm('¿Eliminar "' + record.album + '" de tu colección? Esta acción no se puede deshacer.')){
+        $('detailModalOverlay').hidden = true;
+        await deleteRecordEverywhere(record.id);
+      }
+    });
+
+    const media = await fetchMedia(id);
+    const imgsWrap = $('vinylImgsWrap');
+    if(media.vinylImages && media.vinylImages.length){
+      imgsWrap.innerHTML = media.vinylImages.map(src => '<img src="' + src + '">').join('');
+    }else{
+      imgsWrap.innerHTML = '<p class="no-media">No hay fotos del vinilo.</p>';
+    }
+
+    const videoWrap = $('videoWrap');
+    if(media.video && media.video.type === 'file'){
+      videoWrap.innerHTML = '<video controls src="' + media.video.data + '"></video>';
+    }else if(media.video && media.video.type === 'url'){
+      const url = media.video.data;
+      const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([\w-]+)/);
+      if(ytMatch){
+        videoWrap.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytMatch[1] + '" allowfullscreen></iframe>';
+      }else{
+        videoWrap.innerHTML = '<a class="video-link" href="' + url + '" target="_blank" rel="noopener">Abrir video ↗</a>';
+      }
+    }else{
+      videoWrap.innerHTML = '<p class="no-media">No hay video para este disco.</p>';
+    }
+  }
+
+  $('closeDetailModal').addEventListener('click', () => $('detailModalOverlay').hidden = true);
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', (e) => { if(e.target === ov) ov.hidden = true; });
+  });
+
+  // ---------- Filter/sort listeners ----------
+  ['searchInput','filterGenre','filterCondition','sortSelect'].forEach(id => {
+    $(id).addEventListener('input', renderGrid);
+    $(id).addEventListener('change', renderGrid);
+  });
+
+  // ---------- Init ----------
+  loadRecords();
+})();
+</script>
+</body>
+</html>
