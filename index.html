@@ -258,14 +258,37 @@
 
   @media (max-width: 760px){
     .app{ flex-direction:column; }
-    .nav{ width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:16px 18px; gap:14px; }
-    .brand{ margin-bottom:0; }
-    .nav-tabs{ flex-direction:row; margin-bottom:0; }
-    .btn-add{ margin-top:0; margin-left:auto; }
+    .nav{
+      width:100%; height:auto; position:relative;
+      flex-direction:row; flex-wrap:wrap; align-items:center;
+      padding:14px 16px; gap:10px 12px;
+    }
+    .brand{ order:1; flex:1 1 auto; margin-bottom:0; min-width:0; }
+    .brand h1{ font-size:1.05rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .brand-mark{ width:28px; height:28px; }
+    .btn-add{
+      order:2; flex:0 0 auto; margin-top:0; margin-left:0;
+      padding:9px 15px; font-size:0.82rem; white-space:nowrap;
+      box-shadow:none;
+    }
+    .nav-tabs{
+      order:3; flex:1 1 100%; flex-direction:row; margin-bottom:0;
+      gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      padding-bottom:2px;
+    }
+    .nav-tab{ flex:0 0 auto; white-space:nowrap; padding:8px 12px; font-size:0.88rem; }
     .nav-hint{ display:none; }
-    .content{ padding: 24px 18px; }
+    .content{ padding: 22px 16px; }
+    .panel-header{ flex-wrap:wrap; gap:8px; }
+    .controls-bar select, .controls-bar input[type=search]{ flex:1 1 100%; }
     .stat-card{ flex-direction:column; align-items:flex-start; }
     .stat-side{ align-items:flex-start; }
+    .grid{ grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:14px 12px; }
+  }
+
+  @media (max-width: 420px){
+    .btn-add{ padding:9px 12px; font-size:0; }
+    .btn-add::after{ content:"+"; font-size:1.1rem; font-weight:800; }
   }
 </style>
 </head>
@@ -444,7 +467,7 @@
       </div>
 
       <div class="field">
-        <label for="fVideoFile">Video de cómo suena — archivo (opcional, máx. 5 MB)</label>
+        <label for="fVideoFile">Video de cómo suena — archivo (opcional, máx. 3 MB)</label>
         <div class="field-file"><input type="file" id="fVideoFile" accept="video/*"></div>
       </div>
       <div class="field">
@@ -835,8 +858,8 @@
       showFormError('Completa los campos obligatorios: álbum, artista, género, condición y precio de costo.');
       return;
     }
-    if(videoFile && videoFile.size > 5 * 1024 * 1024){
-      showFormError('El video pesa más de 5 MB. Sube un clip más corto o pega un enlace en su lugar.');
+    if(videoFile && videoFile.size > 3 * 1024 * 1024){
+      showFormError('El video pesa más de 3 MB. Sube un clip más corto o pega un enlace en su lugar.');
       return;
     }
 
