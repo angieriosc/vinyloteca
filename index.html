@@ -240,13 +240,16 @@
 
   /* ---------- Detail modal ---------- */
   .detail-modal{ max-width:720px; }
-  .detail-top{ display:flex; gap:20px; padding:22px 24px 6px; flex-wrap:wrap; }
-  .detail-cover{ position:relative; width:180px; height:180px; flex-shrink:0; }
-  .detail-info h3{ font-size:1.35rem; margin-bottom:4px; }
-  .detail-artist{ color: var(--ink-soft); font-size:1rem; margin-bottom:10px; }
-  .detail-line{ font-size:0.86rem; margin-bottom:6px; }
-  .detail-line span.k{ color: var(--ink-soft); }
-  .detail-actions{ display:flex; gap:10px; margin-top:14px; }
+  .detail-top{ display:flex; gap:28px; padding:26px 28px 10px; flex-wrap:wrap; }
+  .detail-cover{ position:relative; width:200px; height:200px; flex-shrink:0; }
+  .detail-cover .cover-img, .detail-cover .cover-placeholder{ border-radius:10px; }
+  .detail-info{ display:flex; flex-direction:column; min-width:220px; }
+  .detail-info h3{ font-size:1.5rem; margin-bottom:6px; }
+  .detail-artist{ color: var(--ink-soft); font-size:1.02rem; margin-bottom:18px; }
+  .detail-meta{ display:flex; flex-direction:column; gap:11px; margin-bottom:20px; }
+  .detail-line{ font-size:0.92rem; display:flex; align-items:center; gap:8px; }
+  .detail-line span.k{ color: var(--ink-soft); min-width:76px; display:inline-block; }
+  .detail-actions{ display:flex; gap:10px; margin-top:4px; }
   .section-title{ font-size:0.8rem; font-weight:600; color: var(--ink-soft); margin: 18px 24px 8px; }
   .vinyl-imgs{ display:flex; gap:10px; padding: 0 24px 20px; flex-wrap:wrap; }
   .vinyl-imgs img{ width:120px; height:120px; object-fit:cover; border-radius:8px; box-shadow: var(--shadow); }
@@ -1029,16 +1032,18 @@
     const body = $('detailBody');
     body.innerHTML =
       '<div class="detail-top">' +
-        '<div class="detail-cover"><div class="vinyl-peek"></div>' +
+        '<div class="detail-cover">' +
         (record.cover ? '<img class="cover-img" src="' + record.cover + '">' : '<div class="cover-placeholder">Sin portada</div>') +
         '</div>' +
         '<div class="detail-info">' +
           '<h3>' + escapeHtml(record.album) + '</h3>' +
           '<div class="detail-artist">' + escapeHtml(record.artist) + (record.year ? ' · ' + escapeHtml(record.year) : '') + '</div>' +
-          '<div class="detail-line"><span class="k">Género:</span> ' + escapeHtml(record.genre) + '</div>' +
-          '<div class="detail-line"><span class="k">Condición:</span> <span class="badge ' + conditionClass(record.condition) + '">' + escapeHtml(record.condition) + '</span></div>' +
-          '<div class="detail-line"><span class="k">Costo:</span> ' + money(record.costPrice) + '</div>' +
-          '<div class="detail-line"><span class="k">Venta:</span> ' + (isSold(record) ? money(record.salePrice) : 'No vendido') + '</div>' +
+          '<div class="detail-meta">' +
+            '<div class="detail-line"><span class="k">Género</span> ' + escapeHtml(record.genre) + '</div>' +
+            '<div class="detail-line"><span class="k">Condición</span> <span class="badge ' + conditionClass(record.condition) + '">' + escapeHtml(record.condition) + '</span></div>' +
+            '<div class="detail-line"><span class="k">Costo</span> ' + money(record.costPrice) + '</div>' +
+            '<div class="detail-line"><span class="k">Venta</span> ' + (isSold(record) ? money(record.salePrice) : 'No vendido') + '</div>' +
+          '</div>' +
           '<div class="detail-actions">' +
             '<button class="btn-ghost" id="editBtn">Editar</button>' +
             '<button class="btn-danger-outline" id="deleteBtn">Eliminar</button>' +
