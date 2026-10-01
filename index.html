@@ -554,7 +554,7 @@
     $('loadingState').hidden = false;
     const out = [];
     try{
-      const res = await databases.listDocuments(DATABASE_ID, RECORDS_COLLECTION_ID, [Query.limit(100)]);
+      const res = await databases.listDocuments(DATABASE_ID, RECORDS_COLLECTION_ID, [Query.limit(1000)]);
       res.documents.forEach(doc => {
         out.push({
           id: doc.$id,
